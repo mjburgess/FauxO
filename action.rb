@@ -136,8 +136,8 @@ class Complect < ActionList
       }
 
       when [true, false] then complex(input, couple) { |state, actions|
-        f, g, gd = actions.flatten
-        f.call *(g.call state, *gd)
+        f, fd, g = actions.flatten
+        f.call *(g.call state), fd
       }
       when [false, false] then complex(input, couple)  { |state, actions|
         f, g = actions
@@ -150,16 +150,16 @@ class Complect < ActionList
     case [self.dependent?, couple.dependent?]
       when [true, true] then complex(input, couple) { |state, actions|
         f, fd, g, gd = actions.flatten
-        f.call *(g.call (strand.call(state, g, gd, f, fd)), *gd) *fd
+        f.call *(g.call (strand.call(state, g, gd, f, fd)), *gd), *fd
       }
 
       when [false, true] then complex(input, couple) { |state, actions|
         f, g, gd = actions.flatten
-        f.call *(g.call (strand.call(state, g, f, gd))), *fd
+        f.call *(g.call (strand.call(state, g, f, gd)), *gd)
       }
 
       when [true, false] then complex(input, couple) { |state, actions|
-        f, g, gd = actions.flatten
+        f, fd, g = actions.flatten
         f.call *(g.call (strand.call(state, g, f, gd))), *fd
       }
       when [false, false] then complex(input, couple)  { |state, actions|
@@ -227,8 +227,8 @@ class Couple < ActionList
       }
 
       when [true, false] then coapply(couple) { |actions|
-        f, g, gd = actions.flatten
-        f.call *(g.call *gd)
+        f, fd, g  = actions.flatten
+        f.call *(g.call), *fd
       }
       when [false, false] then coapply(couple)  { |actions|
         f, g = actions.flatten
@@ -250,9 +250,10 @@ class Couple < ActionList
       }
 
       when [true, false] then coapply(couple) { |actions|
-        f, g, gd = actions.flatten
-        f.call *(g.call (strand.call(g, f, gd)), *fd)
+        f, fd, g = actions.flatten
+        f.call *(g.call (strand.call(g, f, fd))), *fd
       }
+
       when [false, false] then coapply(couple)  { |actions|
         f, g = actions.flatten
         f.call *(g.call (strand.call(g, f)))
@@ -268,4 +269,3 @@ class Couple < ActionList
     @applicable.map(&combination)
   end
 end
-
