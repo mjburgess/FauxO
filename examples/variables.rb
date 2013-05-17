@@ -1,4 +1,4 @@
-require_relative 'variable'
+require_relative '../variable'
 
 # i -> i
 def adder(num)

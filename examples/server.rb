@@ -1,5 +1,5 @@
-require "socket"
-require_relative "action"
+require 'socket'
+require_relative '../action'
 
 
 

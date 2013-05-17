@@ -1,4 +1,4 @@
-require_relative 'variable.rb'
+require_relative '../variable.rb'
 
 class Calculator
   def add(x, y)
