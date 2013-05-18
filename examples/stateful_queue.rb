@@ -16,8 +16,6 @@ def mulTwo(x)
   x * 2
 end
 
-
-
 multia = Complect.new [:add, :mul], [5, 10]
 
 puts '(5 + 5) * 10 = ' + multia.run(5).to_s
@@ -33,7 +31,7 @@ simb = Complect.new [:mulTwo, :mulTwo]
 puts '((5 * 2) + 1) * 2) + 1) = ' + simb.weave(5, sima).to_s
 
 print 'With info: '
-print ' = ', simb.weave_with(5, sima) { |state, opA, opB|
-  print " (#{state}) #{opA.name} #{opB.name}"
+print ' = ', simb.weave_with(5, sima) { |state, fn, _|
+  print " (#{state}) #{fn.name}"
   state
 }

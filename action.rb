@@ -94,6 +94,22 @@ class ActionList < Action
   def dependent?
     @dependent
   end
+
+  def complex(state, couple, &combination)
+    couple.applicable.zip(@applicable).inject(state, &combination)
+  end
+
+  def simplex(state, &combination)
+    @applicable.inject(state, &combination)
+  end
+
+  def coapply(couple, &combination)
+    couple.applicable.zip(@applicable).map(&combination)
+  end
+
+  def apply(&combination)
+    @applicable.map(&combination)
+  end
 end
 
 class Complect < ActionList
@@ -124,57 +140,20 @@ class Complect < ActionList
   end
 
   def weave(input, couple)
-    case [self.dependent?, couple.dependent?]
-      when [true, true] then complex(input, couple) { |state, actions|
-        f, fd, g, gd = actions.flatten
-        f.call *(g.call state, *gd), *fd
-      }
-
-      when [false, true] then complex(input, couple) { |state, actions|
-        f, g, gd = actions.flatten
-        f.call *(g.call state, *gd)
-      }
-
-      when [true, false] then complex(input, couple) { |state, actions|
-        f, fd, g = actions.flatten
-        f.call *(g.call state), fd
-      }
-      when [false, false] then complex(input, couple)  { |state, actions|
-        f, g = actions
-        f.call *(g.call state)
-      }
-    end
+    complex(input, couple) { |state, actions|
+      actions.each { |fn, dep| state = dep ? (fn.call state, *dep) : (fn.call state) }
+      state
+    }
   end
 
   def weave_with(input, couple, &strand)
-    case [self.dependent?, couple.dependent?]
-      when [true, true] then complex(input, couple) { |state, actions|
-        f, fd, g, gd = actions.flatten
-        f.call *(g.call (strand.call(state, g, gd, f, fd)), *gd), *fd
+    complex(input, couple) { |state, actions|
+      actions.each { |fn, dep|
+        state = strand.call(state, fn, dep)
+        state = dep ? (fn.call state, *dep) : (fn.call state)
       }
-
-      when [false, true] then complex(input, couple) { |state, actions|
-        f, g, gd = actions.flatten
-        f.call *(g.call (strand.call(state, g, f, gd)), *gd)
-      }
-
-      when [true, false] then complex(input, couple) { |state, actions|
-        f, fd, g = actions.flatten
-        f.call *(g.call (strand.call(state, g, f, gd))), *fd
-      }
-      when [false, false] then complex(input, couple)  { |state, actions|
-        f, g = actions
-        f.call *(g.call (strand.call(state, g, f)))
-      }
-    end
-  end
-
-  def complex(state, couple, &combination)
-    couple.applicable.zip(@applicable).inject(state, &combination)
-  end
-
-  def simplex(state, &combination)
-    @applicable.inject(state, &combination)
+      state
+    }
   end
 end
 
@@ -213,59 +192,19 @@ class Couple < ActionList
     end
   end
 
-
   def weave(couple)
-    case [self.dependent?, couple.dependent?]
-      when [true, true] then coapply(couple) { |actions|
-        f, fd, g, gd = actions.flatten
-        f.call *(g.call *gd), *fd
-      }
-
-      when [false, true] then coapply(couple) { |actions|
-        f, g, gd = actions.flatten
-        f.call *(g.call *gd)
-      }
-
-      when [true, false] then coapply(couple) { |actions|
-        f, fd, g  = actions.flatten
-        f.call *(g.call), *fd
-      }
-      when [false, false] then coapply(couple)  { |actions|
-        f, g = actions.flatten
-        f.call *(g.call)
-      }
-    end
+    coapply(couple) { |actions|
+      (fn, fdep), (gn, gdep) = actions
+      gn = gdep ? (gn.call *gdep) : gn.call
+      fdep ? (fn.call gn, *fdep) : (fn.call gn)
+    }
   end
 
   def weave_with(couple, &strand)
-    case [self.dependent?, couple.dependent?]
-      when [true, true] then coapply(couple) { |actions|
-        f, fd, g, gd = actions.flatten
-        f.call *(g.call (strand.call(g, gd, f, fd)), *gd, *fd)
-      }
-
-      when [false, true] then coapply(couple) { |actions|
-        f, g, gd = actions.flatten
-        f.call *(g.call (strand.call(g, f, gd)), *fd)
-      }
-
-      when [true, false] then coapply(couple) { |actions|
-        f, fd, g = actions.flatten
-        f.call *(g.call (strand.call(g, f, fd))), *fd
-      }
-
-      when [false, false] then coapply(couple)  { |actions|
-        f, g = actions.flatten
-        f.call *(g.call (strand.call(g, f)))
-      }
-    end
-  end
-
-  def coapply(couple, &combination)
-    couple.applicable.zip(@applicable).map(&combination)
-  end
-
-  def apply(&combination)
-    @applicable.map(&combination)
+    coapply(couple) { |actions|
+      (fn, fdep), (gn, gdep) = strand.call *actions
+      gn = gdep ? (gn.call *dep) : (gn.call)
+      fdep ? (fn.call gn, *dep) : (fn.call gn)
+    }
   end
 end
