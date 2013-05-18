@@ -14,7 +14,7 @@ def data_consumer(data)
   if data[:name].length > 0 && data[:age] > 1
     puts data.inspect
   else
-    puts “invalid format”
+    puts "invalid format"
   end
 end
 
