@@ -16,22 +16,27 @@ def mulTwo(x)
   x * 2
 end
 
-multia = Complect.new [:add, :mul], [5, 10]
+dependent_a = Complect.new [:add, :mul], [5, 10]
+dependent_b = Complect.new [:add, :mul], [1, 2]
 
-puts '(5 + 5) * 10 = ' + multia.run(5).to_s
+puts 'dA'
+print '(((1 + 5) + 1) * 10) * 2 = '
+puts dependent_a.weave(1, dependent_b)
 
-multib = Complect.new [:add, :mul], [1, 2]
+puts 'dB'
+print '(5 + 5) * 10 = '
+puts dependent_a.run(5)
 
-puts '(((1 + 5) + 1) * 10) * 2 = ' + multia.weave(1, multib).to_s
 
-sima = Complect.new [:addOne, :addOne]
-puts '5 + 1 + 1 = ' + sima.run(5).to_s
+free_a = Complect.new [:addOne, :addOne]
+free_b = Complect.new [:mulTwo, :mulTwo]
 
-simb = Complect.new [:mulTwo, :mulTwo]
-puts '((5 * 2) + 1) * 2) + 1) = ' + simb.weave(5, sima).to_s
+puts 'fA'
+print '((5 * 2) + 1) * 2) + 1) = '
+puts free_b.weave(5, free_a)
 
-print 'With info: '
-print ' = ', simb.weave_with(5, sima) { |state, fn, _|
-  print " (#{state}) #{fn.name}"
-  state
-}
+puts 'fB'
+print '5 + 1 + 1 = '
+puts free_a.run(5)
+
+
